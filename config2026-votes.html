@@ -757,7 +757,7 @@
   <div class="thanks-votes" id="thanks-list"></div>
   <p class="thanks-note">Changed your mind? Vote again with the same name and your previous votes will be replaced.</p>
   <div class="submitting-msg" id="submitting-msg"></div>
-  <button class="btn-primary" onclick="closePage()">Close page</button>
+  <button class="btn-primary" onclick="resetForNext()">Next person →</button>
 </div>
 
 <!-- Theme toggle — fixed, visible on all pages -->
@@ -774,16 +774,6 @@
     </svg>
   </div>
 </button>
-
-<!-- PAGE CLOSED fallback -->
-<div id="page-closed" style="display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:2rem; gap:0.75rem; position:relative; z-index:1;">
-  <div class="logo-row" style="margin-bottom:1.5rem">
-    <div class="figma-dots"><span></span><span></span><span></span><span></span></div>
-    Config 2026
-  </div>
-  <h1 style="font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3vw,2.5rem);font-weight:800;color:var(--accent);margin-bottom:0.5rem">You're all done.</h1>
-  <p style="color:var(--muted);font-size:0.9rem;max-width:320px;line-height:1.6">You can close this tab now.</p>
-</div>
 
 <script>
 // ─────────────────────────────────────────────────────
@@ -808,17 +798,6 @@ function toggleTheme() {
     });
   }
 })();
-
-// ─── Close page ───
-function closePage() {
-  // Try window.close() first (works if tab was script-opened)
-  window.close();
-  // If still here after a tick, show a friendly "you can close" state
-  setTimeout(() => {
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-    document.getElementById('page-closed').style.display = 'flex';
-  }, 80);
-}
 
 const MAX_VOTES = 5;
 let voterName = '';
@@ -1044,6 +1023,7 @@ async function submitVotes() {
   document.getElementById('btn-submit').disabled = true;
   const selectedTitles = Array.from(selectedTalks).map(id => talks[id].title);
 
+  // Show thanks page
   document.getElementById('page-vote').style.display = 'none';
   document.getElementById('page-thanks').style.display = 'flex';
   document.getElementById('thanks-msg').textContent = `${voterName}, your ${selectedTalks.size} vote${selectedTalks.size!==1?'s':''} have been recorded.`;
@@ -1057,6 +1037,7 @@ async function submitVotes() {
     list.appendChild(item);
   });
 
+  // Save to sheet
   if (SHEET_URL && SHEET_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
     document.getElementById('submitting-msg').textContent = 'Saving…';
     try {
@@ -1066,7 +1047,7 @@ async function submitVotes() {
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ name: voterName, votes: selectedTitles, timestamp: new Date().toISOString() })
       });
-      document.getElementById('submitting-msg').textContent = '✓ Saved to sheet';
+      document.getElementById('submitting-msg').textContent = '✓ Saved';
     } catch(e) {
       document.getElementById('submitting-msg').textContent = 'Could not reach sheet — try again later.';
     }
